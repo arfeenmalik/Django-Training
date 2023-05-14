@@ -1,25 +1,148 @@
-import time
-from django.db.models.query_utils import DeferredAttribute
-from django.http import HttpResponse, FileResponse
+from django.http import HttpResponse
+from django.http import HttpResponse
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from django_filters.views import FilterView
 from reportlab.lib import colors
-from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_JUSTIFY, TA_RIGHT
+from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import cm, inch
-from reportlab.platypus import Table, TableStyle, Indenter, KeepTogether, Spacer, Image
-from .forms import TrainingForm
-from .models import Training
-from .filters import TrainingFilter
-from django.shortcuts import render, redirect, get_object_or_404
-from reportlab.pdfgen import canvas
-from io import BytesIO
-from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
-from reportlab.lib.pagesizes import letter
-from reportlab.lib import colors
-from io import BytesIO
-from django.http import FileResponse
+
+from .filters import TrainingFilter
+from .forms import TrainingForm, ResourceItemFormSet
+from .models import Training, ResourceItem
+from django.views.generic import ListView
+from django.views.generic.edit import (
+    CreateView, UpdateView
+)
+
+def create_training(request):
+    if request.method == "POST":
+        form = TrainingForm(request.POST)
+        formset = ResourceItemFormSet(request.POST)
+        if formset.is_valid() & form.is_valid():
+
+            training_new = form.save()
+            resource_items = formset.save(commit=False)
+
+            for obj in formset.deleted_objects:
+                obj.delete()
+            for resource_item in resource_items:
+                resource_item.fk_training = training_new
+                resource_item.save()
+
+            return redirect('home')
+
+    else:
+        form = TrainingForm()
+        formset = ResourceItemFormSet()
+
+        context = {
+            "form": form,
+            "formset": formset
+        }
+
+        # return render(request, "training/training_create_or_update.html", context)
+        return render(request, "training/create_training.html", context)
+def update_training(request, pk):
+    training = Training.objects.get(id=pk)
+    resource_items = ResourceItem.objects.filter(fk_training=training)
+    form = TrainingForm(instance=training)
+    formset = ResourceItemFormSet(request.POST or None, instance=training)
+
+    if request.method == "POST":
+        form = TrainingForm(request.POST, instance=training)
+
+        if formset.is_valid() & form.is_valid():
+            formset.instance = training
+            form.save()
+            formset.save()
+            return redirect("create-training", pk=training.id)
+
+    context = {
+        "form": form,
+        "formset": formset,
+        "training": training,
+        "resource_items": resource_items
+    }
+
+    # return render(request, "training/training_create_or_update.html", context)
+    return render(request, "training/create_training.html", context)
+
+class TrainingInline():
+    form_class = TrainingForm
+    model = Training
+    template_name = "training/training_create_or_update.html"
+
+    def form_valid(self, form):
+        print("form_valid")
+        named_formsets = self.get_named_formsets()
+        if not all((x.is_valid() for x in named_formsets.values())):
+            return self.render_to_response(self.get_context_data(form=form))
+
+        self.object = form.save()
+
+
+        for name, formset in named_formsets.items():
+            print(name)
+            formset_save_func = getattr(self, 'formset_{0}_valid'.format(name), None)
+            if formset_save_func is not None:
+                print("formset_save_func is not None")
+                formset_save_func(formset)
+            else:
+                formset.save()
+        return redirect('home')
+
+    def formset_resource_items_valid(self, formset):
+        """
+        Hook for custom formset saving.Useful if you have multiple formsets
+        """
+        # print("formset_resource_item_valid")
+        resource_items = formset.save(commit=False)  # self.save_formset(formset, contact)
+        # add this 2 lines, if you have can_delete=True parameter
+        # set in inlineformset_factory func
+        for obj in formset.deleted_objects:
+            obj.delete()
+        for resource_item in resource_items:
+            resource_item.fk_training = self.object
+            resource_item.save()
+
+
+class TrainingCreate(TrainingInline, CreateView):
+
+    def get_context_data(self, **kwargs):
+        print("get_context_data")
+        ctx = super(TrainingCreate, self).get_context_data(**kwargs)
+        ctx['named_formsets'] = self.get_named_formsets()
+        return ctx
+
+    def get_named_formsets(self):
+        print("get_named_formsets")
+        if self.request.method == "GET":
+            return {
+                'resource_items': ResourceItemFormSet(prefix='resource_items'),
+            }
+        else:
+            return {
+                'resource_items': ResourceItemFormSet(self.request.POST or None, self.request.FILES or None,
+                                                      prefix='resource_items'),
+            }
+
+
+class TrainingUpdate(TrainingInline, UpdateView):
+
+    def get_context_data(self, **kwargs):
+        ctx = super(TrainingUpdate, self).get_context_data(**kwargs)
+        ctx['named_formsets'] = self.get_named_formsets()
+        return ctx
+
+    def get_named_formsets(self):
+        return {
+            'resource_items': ResourceItemFormSet(self.request.POST or None, self.request.FILES or None,
+                                                  instance=self.object, prefix='resource_items'),
+        }
 
 
 class GeneratePDF(View):
@@ -28,8 +151,8 @@ class GeneratePDF(View):
         response['Content-Disposition'] = 'attachment; filename="form_letter.pdf"'
 
         doc = SimpleDocTemplate(response, pagesize=A4)
-                                # rightMargin=0, leftMargin=0,
-                                # topMargin=0, bottomMargin=0)
+        # rightMargin=0, leftMargin=0,
+        # topMargin=0, bottomMargin=0)
 
         elements = []
         data = []
@@ -41,9 +164,9 @@ class GeneratePDF(View):
         styleSheet.add(ParagraphStyle(name='Right', alignment=TA_RIGHT))
         styleSheet.add(ParagraphStyle(name='Center', alignment=TA_CENTER))
 
-        for idx,training in enumerate(trainings):
+        for idx, training in enumerate(trainings):
             data.append([
-                Paragraph(str(idx+1), styleSheet["Center"]),
+                Paragraph(str(idx + 1), styleSheet["Center"]),
                 Paragraph(training.name, styleSheet["BodyText"]),
                 Paragraph(training.type.name, styleSheet["BodyText"]),
                 Paragraph(str(training.date_start), styleSheet["Center"]),
@@ -69,133 +192,6 @@ class GeneratePDF(View):
         doc.build(elements)
 
         return response
-
-
-# class GeneratePDF(View):
-#     def get(self, request, *args, **kwargs):
-#         # Create response object with PDF
-#         response = HttpResponse(content_type='application/pdf')
-#         response['Content-Disposition'] = 'attachment; filename="simple_table.pdf"'
-#
-#         # Create buffer to store PDF
-#         buffer = BytesIO()
-#
-#         # Create PDF
-#         doc = SimpleDocTemplate(buffer, pagesize=letter)
-#         elements = []
-#
-#         # Define data and headings for table
-#         # data = [['ID', 'Name', 'Age'], ['1', 'John Doe', '25'], ['2', 'Jane Smith', '30']]
-#         # headings = ['ID', 'Name', 'Age']
-#         data = []
-#         headings = ['ID', 'Name', 'Training Type', 'Start Date', 'End Date', 'City', 'Street Address']
-#         trainings = Training.objects.all()
-#
-#         for training in trainings:
-#             # resource_names = [r.name for r in training.resources.all()]
-#
-#             data.append([
-#                 training.id,
-#                 training.name,
-#                 training.type.name,
-#                 str(training.date_start),
-#                 str(training.date_end),
-#                 training.city.name,
-#                 training.street_address,
-#                 # ', '.join(resource_names)
-#             ])
-#
-#         # Define style for table
-#         style = TableStyle([
-#             ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-#             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-#
-#             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-#
-#             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-#             ('FONTSIZE', (0, 0), (-1, 0), 14),
-#             ('LEFTPADDING', (0, 0), (-1, -1), 5),  # Reduce left padding
-#             ('LEFTMARGIN', (0, 0), (-1, -1), 0),  # Set left margin
-#
-#             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-#             ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-#         ])
-#
-#         max_widths = [0.2*inch,0.9*inch,0.9*inch,0.9*inch,0.9*inch,0.9*inch,0.9*inch]
-#
-#         # Create table and add to elements list
-#         table = Table([headings] + data, colWidths=max_widths,spaceBefore=5)
-#         table.setStyle(style)
-#         table.leftIndent = 0  # remove the left indentation
-#
-#         elements.append(table)
-#         # Build PDF
-#
-#         doc.build(elements)
-#
-#         # Write PDF to response
-#         pdf = buffer.getvalue()
-#         buffer.close()
-#         response.write(pdf)
-#
-#         return response
-
-
-# class GeneratePDF(View):
-#     def get(self, request, *args, **kwargs):
-#         data = []
-#         headings = ['ID', 'Name', 'Training Type', 'Start Date', 'End Date', 'City', 'Street Address']
-#         trainings = Training.objects.all()
-#
-#         for training in trainings:
-#             # resource_names = [r.name for r in training.resources.all()]
-#
-#             data.append([
-#                 training.id,
-#                 training.name,
-#                 training.type.name,
-#                 str(training.date_start),
-#                 str(training.date_end),
-#                 training.city.name,
-#                 training.street_address,
-#                 # ', '.join(resource_names)
-#             ])
-#
-#         max_widths= [5,5,5,5,5,5,5]
-#         # Create response object with PDF
-#         response = HttpResponse(content_type='application/pdf')
-#         response['Content-Disposition'] = 'attachment; filename="trainings.pdf"'
-#
-#         buffer = BytesIO()
-#
-#         # Create PDF
-#         doc = SimpleDocTemplate(buffer, pagesize=letter)
-#         elements = []
-#
-#         t = Table([headings] + data, colWidths=max_widths)
-#
-#         t.setStyle(TableStyle([
-#             ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-#             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-#
-#             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-#
-#             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-#             ('FONTSIZE', (0, 0), (-1, 0), 14),
-#
-#             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-#             ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-#         ]))
-#
-#         elements.append(t)
-#         doc.build(elements)
-#
-#         # Write PDF to response
-#         pdf = buffer.getvalue()
-#         buffer.close()
-#         response.write(pdf)
-#
-#         return response
 
 
 class TrainingListView(FilterView):
