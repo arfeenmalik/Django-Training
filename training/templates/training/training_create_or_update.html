@@ -8,7 +8,7 @@
     <!-- main form start --- in our case product form -->
     <div class="card">
         <div class="card-header card-header-secondary">
-            <h4 class="card-title">Add Products</h4>
+            <h4 class="card-title">Training</h4>
         </div>
         {% for field in form %}
             <div class="form-group card-body">
@@ -27,7 +27,7 @@
             </div>
         {% endfor %}
     </div>
-    <!-- main form end --- in our case product form -->
+    <!-- main form end --- in our case training form -->
 
     <!-- inline form for resource_person start -->
     {% with named_formsets.resource_persons as formset %}
@@ -45,14 +45,16 @@
         </script>
         <div class="table-responsive card mt-4">
             <div class="card-header card-header-secondary">
-                <h4 class="card-title">Add resource_persons</h4>
+                <h4 class="card-title">Add Resource Person</h4>
             </div>
             <table class="table card-header">
                 <thead class="text-secondary">
+                <tr>
                     <th>Name <span style="color: red;" class="required">*</span></th>
                     <th>DoB <span style="color: red;" class="required">*</span></th>
                     <th>PIN <span style="color: red;" class="required">*</span></th>
                     <th>Delete?</th>
+                </tr>
                 </thead>
                 <tbody id="item-resource_persons">
                     {% for error in formset.non_form_errors %}
@@ -72,8 +74,6 @@
                                     {% comment %} {{ field.DELETE }} {% endcomment %}
                                 </td>
                             {% endfor %}
-                            {% comment %} for delete {% endcomment %}
-
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -105,24 +105,24 @@
         </script>
         <div class="table-responsive card mt-4">
             <div class="card-header card-header-secondary">
-                <h4 class="card-title">Add resource_items</h4>
+                <h4 class="card-title">Add Resource Item</h4>
             </div>
             <table class="table card-header">
                 <thead class="text-secondary">
+                <tr>
                     <th>Name <span style="color: red;" class="required">*</span></th>
                     <th>Quantity <span style="color: red;" class="required">*</span></th>
                     <th>Price <span style="color: red;" class="required">*</span></th>
                     <th>Delete?</th>
-                    <th>Custom Delete btn</th>
+                </tr>
                 </thead>
-                <tbody id="item-resource_items">  <!-- id="item-inlineformsetname" -->
-                    <!-- formset non forms errors -->
+                <tbody id="item-resource_items">
                     {% for error in formset.non_form_errors %}
                         <span style="color: red">{{ error }}</span>
                     {% endfor %}
                     {% for formss in formset %}
                         {{ formss.management_form }}
-                        <tr id="resource_items-{{ forloop.counter0 }}" class= hide_all>  <!-- id="inlineformsetname-counter" -->
+                        <tr id="resource_items-{{ forloop.counter0 }}" class= hide_all>
                             {{ formss.id }}
                             {% for field in formss.visible_fields %}
                                 <td>
@@ -134,33 +134,7 @@
                                     {% comment %} {{ field.DELETE }} {% endcomment %}
                                 </td>
                             {% endfor %}
-                            {% comment %} for delete {% endcomment %}
-                            {% if formss.instance.pk %}
-                                <td>
-                                    <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#exampleModal{{formss.instance.pk}}">
-                                        Delete
-                                    </button>
-                                    <!-- Modal -->
-                                    <div class="modal fade" id="exampleModal{{formss.instance.pk}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel{{formss.instance.pk}}" aria-hidden="true">
-                                        <div class="modal-dialog" role="document">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                            <h5 class="modal-title" id="exampleModalLabel{{formss.instance.pk}}">Are Your Sure You Want To Delete This?</h5>
-                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                <span aria-hidden="true">&times;</span>
-                                            </button>
-                                            </div>
-                                            <div class="modal-footer">
-                                                {%comment%}
-                                                <a href="{% url 'products:delete_resource_item' formss.instance.pk %}" type="button" class="btn btn-primary">Yes, Delete</a>
-                                                {%endcomment%}
-                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                            </div>
-                                        </div>
-                                        </div>
-                                    </div>
-                                </td>
-                            {% endif %}
+
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -178,7 +152,7 @@
 
 <script>
     $(document).ready(function() {
-        // when user clicks add more btn of images
+        // when user clicks add more btn of resource person
       $('.add-resource_persons').click(function(ev) {
           ev.preventDefault();
           var count = $('#item-resource_persons').children().length;
