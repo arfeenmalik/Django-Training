@@ -38,6 +38,17 @@ class ResourceItem(models.Model):
         return self.name
 
 
+class ResourcePerson(models.Model):
+    name = models.CharField(max_length=255)
+    dob = models.DateField()
+    pin = models.CharField(max_length=6)
+    father_name = models.CharField(max_length=255)
+    cnic = models.CharField(max_length=13)
+    fk_training = models.ForeignKey(Training, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
+
 class Resource(models.Model):
     name = models.CharField(max_length=255)
     dob = models.DateField()

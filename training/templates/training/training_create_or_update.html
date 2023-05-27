@@ -29,6 +29,61 @@
     </div>
     <!-- main form end --- in our case product form -->
 
+    <!-- inline form for resource_person start -->
+    {% with named_formsets.resource_persons as formset %}
+        {{ formset.management_form }}
+        <script type="text/html" id="resource_persons-template">
+            <tr id="resource_persons-__prefix__" class= hide_all>
+                {% for fields in formset.empty_form.hidden_fields %}
+                    {{ fields }}
+                {% endfor %}
+
+                {% for fields in formset.empty_form.visible_fields %}
+                    <td>{{fields}}</td>
+                {% endfor %}
+            </tr>
+        </script>
+        <div class="table-responsive card mt-4">
+            <div class="card-header card-header-secondary">
+                <h4 class="card-title">Add resource_persons</h4>
+            </div>
+            <table class="table card-header">
+                <thead class="text-secondary">
+                    <th>Name <span style="color: red;" class="required">*</span></th>
+                    <th>DoB <span style="color: red;" class="required">*</span></th>
+                    <th>PIN <span style="color: red;" class="required">*</span></th>
+                    <th>Delete?</th>
+                </thead>
+                <tbody id="item-resource_persons">
+                    {% for error in formset.non_form_errors %}
+                        <span style="color: red">{{ error }}</span>
+                    {% endfor %}
+                    {% for formss in formset %}
+                        {{ formss.management_form }}
+                        <tr id="resource_persons-{{ forloop.counter0 }}" class= hide_all>
+                            {{ formss.id }}
+                            {% for field in formss.visible_fields %}
+                                <td>
+                                    {{field}}
+                                    {% for error in field.errors %}
+                                        <span style="color: red">{{ error }}</span>
+                                    {% endfor %}
+
+                                    {% comment %} {{ field.DELETE }} {% endcomment %}
+                                </td>
+                            {% endfor %}
+                            {% comment %} for delete {% endcomment %}
+
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <a href="#" id="add-resource_person-button" class="btn btn-secondary add-resource_persons">Add More</a> <!-- id="add-inlineformsetname-button" -->
+        </div>
+
+        {% endwith %}
+        <!-- inline form for resource_person end -->
+
     <!-- inline form for resource_item start -->
 
     <!-- EXPLAINING with named_formsets.resource_items as formset -->
@@ -114,7 +169,7 @@
         </div>
 
         {% endwith %}
-        <!-- inline form for Images end -->
+        <!-- inline form for resource_item end -->
 
         <div class="form-group">
             <button type="submit" class="btn btn-secondary btn-block">Submit</button>
@@ -124,15 +179,15 @@
 <script>
     $(document).ready(function() {
         // when user clicks add more btn of images
-      $('.add-images').click(function(ev) {
+      $('.add-resource_persons').click(function(ev) {
           ev.preventDefault();
-          var count = $('#item-images').children().length;
-          var tmplMarkup = $('#images-template').html();
+          var count = $('#item-resource_persons').children().length;
+          var tmplMarkup = $('#resource_persons-template').html();
           var compiledTmpl = tmplMarkup.replace(/__prefix__/g, count);
-          $('#item-images').append(compiledTmpl);
+          $('#item-resource_persons').append(compiledTmpl);
 
           // update form count
-          $('#id_images-TOTAL_FORMS').attr('value', count+1);
+          $('#id_resource_persons-TOTAL_FORMS').attr('value', count+1);
       });
   });
 

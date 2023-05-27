@@ -1,5 +1,5 @@
 from django import forms
-from .models import Training, ResourceItem
+from .models import Training, ResourceItem, ResourcePerson
 from django.forms import inlineformset_factory
 
 
@@ -14,6 +14,30 @@ class TrainingForm(forms.ModelForm):
             'city': forms.Select(attrs={'class': 'form-control form-select'}),
         }
 
+
+class ResourcePersonForm(forms.ModelForm):
+    class Meta:
+        model = ResourcePerson
+        #fields = '__all__'
+        fields = ['name', 'dob', 'pin']
+        widgets = {
+            'name': forms.TextInput(
+                attrs={
+                    'class': 'form-control'
+                }
+            ),
+            'dob': forms.DateInput(
+                attrs={
+                    'class': 'form-control',
+                    'type':'date'
+                }
+            ),
+            'pin': forms.TextInput(
+                attrs={
+                    'class': 'form-control'
+                }
+            ),
+        }
 
 class ResourceItemForm(forms.ModelForm):
     class Meta:
@@ -39,6 +63,11 @@ class ResourceItemForm(forms.ModelForm):
         }
 
 
+ResourcePersonFormSet = inlineformset_factory(
+    Training, ResourcePerson, form=ResourcePersonForm,
+    extra=1
+    # can_delete=False, can_delete_extra=True
+)
 ResourceItemFormSet = inlineformset_factory(
     Training, ResourceItem, form=ResourceItemForm,
     extra=1
