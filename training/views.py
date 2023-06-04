@@ -11,7 +11,7 @@ from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 
 from .filters import TrainingFilter
-from .forms import TrainingForm, ResourceItemFormSet, ResourcePersonFormSet
+from .forms import TrainingForm, ResourceItemFormSet, ResourcePersonFormSet, TrainingFileFormSet
 from .models import Training, ResourceItem
 from django.views.generic import ListView
 from django.views.generic.edit import (
@@ -95,6 +95,15 @@ class TrainingInline():
                 formset.save()
         return redirect('home')
 
+    def formset_training_files_valid(self, formset):
+        training_files = formset.save(commit=False)
+
+        for obj in formset.deleted_objects:
+            obj.delete()
+        for training_file in training_files:
+            training_file.fk_training = self.object
+            training_file.save()
+
     def formset_resource_items_valid(self, formset):
         """
         Hook for custom formset saving.Useful if you have multiple formsets
@@ -137,11 +146,14 @@ class TrainingCreate(TrainingInline, CreateView):
         print("get_named_formsets")
         if self.request.method == "GET":
             return {
+                'training_files': TrainingFileFormSet(prefix='training_files'),
                 'resource_persons': ResourcePersonFormSet(prefix='resource_persons'),
                 'resource_items': ResourceItemFormSet(prefix='resource_items'),
             }
         else:
             return {
+                'training_files': TrainingFileFormSet(self.request.POST or None, self.request.FILES or None,
+                                                      prefix='training_files'),
                 'resource_persons': ResourcePersonFormSet(self.request.POST or None, self.request.FILES or None,
                                                       prefix='resource_persons'),
                 'resource_items': ResourceItemFormSet(self.request.POST or None, self.request.FILES or None,
@@ -158,6 +170,8 @@ class TrainingUpdate(TrainingInline, UpdateView):
 
     def get_named_formsets(self):
         return {
+            'training_files': TrainingFileFormSet(self.request.POST or None, self.request.FILES or None,
+                                                  instance=self.object, prefix='training_files'),
             'resource_persons': ResourcePersonFormSet(self.request.POST or None, self.request.FILES or None,
                                                   instance=self.object, prefix='resource_persons'),
             'resource_items': ResourceItemFormSet(self.request.POST or None, self.request.FILES or None,

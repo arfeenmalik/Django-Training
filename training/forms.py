@@ -1,5 +1,5 @@
 from django import forms
-from .models import Training, ResourceItem, ResourcePerson
+from .models import Training, ResourceItem, ResourcePerson, TrainingFile
 from django.forms import inlineformset_factory
 
 
@@ -18,10 +18,20 @@ class TrainingForm(forms.ModelForm):
         }
 
 
+class TrainingFileForm(forms.ModelForm):
+    class Meta:
+        model = TrainingFile
+        fields = ['description', 'file']
+        widgets = {
+            'description': forms.TextInput(attrs={'class': 'form-control'}),
+            'file': forms.FileInput(attrs={'class': 'form-control'}),
+        }
+
+
 class ResourcePersonForm(forms.ModelForm):
     class Meta:
         model = ResourcePerson
-        #fields = '__all__'
+        # fields = '__all__'
         fields = ['name', 'dob', 'pin']
         widgets = {
             'name': forms.TextInput(
@@ -32,7 +42,7 @@ class ResourcePersonForm(forms.ModelForm):
             'dob': forms.DateInput(
                 attrs={
                     'class': 'form-control',
-                    'type':'date'
+                    'type': 'date'
                 }
             ),
             'pin': forms.TextInput(
@@ -42,10 +52,11 @@ class ResourcePersonForm(forms.ModelForm):
             ),
         }
 
+
 class ResourceItemForm(forms.ModelForm):
     class Meta:
         model = ResourceItem
-        #fields = '__all__'
+        # fields = '__all__'
         fields = ['name', 'quantity', 'estimated_price']
         widgets = {
             'name': forms.TextInput(
@@ -66,6 +77,11 @@ class ResourceItemForm(forms.ModelForm):
         }
 
 
+TrainingFileFormSet = inlineformset_factory(
+    Training, TrainingFile, form=TrainingFileForm,
+    extra=1
+    # can_delete=False, can_delete_extra=True
+)
 ResourcePersonFormSet = inlineformset_factory(
     Training, ResourcePerson, form=ResourcePersonForm,
     extra=1

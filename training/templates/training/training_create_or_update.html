@@ -29,6 +29,61 @@
     </div>
     <!-- main form end --- in our case training form -->
 
+    <!-- inline form for training_file start -->
+    {% with named_formsets.training_files as formset %}
+        {{ formset.management_form }}
+        <script type="text/html" id="training_files-template">
+            <tr id="training_files-__prefix__" class= hide_all>
+                {% for fields in formset.empty_form.hidden_fields %}
+                    {{ fields }}
+                {% endfor %}
+
+                {% for fields in formset.empty_form.visible_fields %}
+                    <td>{{fields}}</td>
+                {% endfor %}
+            </tr>
+        </script>
+        <div class="table-responsive card mt-4">
+            <div class="card-header card-header-secondary">
+                <h4 class="card-title">Add File</h4>
+            </div>
+            <table class="table card-header">
+                <thead class="text-secondary">
+                <tr>
+                    <th>Description <span style="color: red;" class="required">*</span></th>
+                    <th>File <span style="color: red;" class="required">*</span></th>
+                    <th>Delete?</th>
+                </tr>
+                </thead>
+                <tbody id="item-training_files">
+                    {% for error in formset.non_form_errors %}
+                        <span style="color: red">{{ error }}</span>
+                    {% endfor %}
+                    {% for formss in formset %}
+                        {{ formss.management_form }}
+                        <tr id="training_files-{{ forloop.counter0 }}" class= hide_all>
+                            {{ formss.id }}
+                            {% for field in formss.visible_fields %}
+                                <td>
+                                    {{field}}
+                                    {% for error in field.errors %}
+                                        <span style="color: red">{{ error }}</span>
+                                    {% endfor %}
+
+                                    {% comment %} {{ field.DELETE }} {% endcomment %}
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <a href="#" id="add-training_files-button" class="btn btn-secondary add-training_files">Add More</a> <!-- id="add-inlineformsetname-button" -->
+        </div>
+
+        {% endwith %}
+        <!-- inline form for resource_person end -->
+
+
     <!-- inline form for resource_person start -->
     {% with named_formsets.resource_persons as formset %}
         {{ formset.management_form }}
@@ -151,6 +206,20 @@
 </form>
 
 <script>
+    $(document).ready(function() {
+        // when user clicks add more btn of files
+      $('.add-training_files').click(function(ev) {
+          ev.preventDefault();
+          var count = $('#item-training_files').children().length;
+          var tmplMarkup = $('#training_files-template').html();
+          var compiledTmpl = tmplMarkup.replace(/__prefix__/g, count);
+          $('#item-training_files').append(compiledTmpl);
+
+          // update form count
+          $('#id_training_files-TOTAL_FORMS').attr('value', count+1);
+      });
+  });
+
     $(document).ready(function() {
         // when user clicks add more btn of resource person
       $('.add-resource_persons').click(function(ev) {

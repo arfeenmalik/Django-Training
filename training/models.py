@@ -26,6 +26,14 @@ class Training(models.Model):
     city = models.ForeignKey(CatCity, on_delete=models.CASCADE)
     street_address = models.CharField(max_length=255)
 
+class TrainingFile(models.Model):
+    fk_training = models.ForeignKey(Training, on_delete=models.CASCADE)
+    description = models.CharField(max_length=255)
+    file = models.FileField(blank=True, upload_to='training/')
+
+    def __str__(self):
+        return self.description
+
 class ResourceItem(models.Model):
     name = models.CharField(max_length=100)
     quantity = models.IntegerField()
