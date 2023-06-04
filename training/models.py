@@ -25,8 +25,6 @@ class Training(models.Model):
     date_end = models.DateField()
     city = models.ForeignKey(CatCity, on_delete=models.CASCADE)
     street_address = models.CharField(max_length=255)
-    resources = models.ManyToManyField('Resource')
-
 
 class ResourceItem(models.Model):
     name = models.CharField(max_length=100)
@@ -45,16 +43,6 @@ class ResourcePerson(models.Model):
     father_name = models.CharField(max_length=255)
     cnic = models.CharField(max_length=13)
     fk_training = models.ForeignKey(Training, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return self.name
-
-class Resource(models.Model):
-    name = models.CharField(max_length=255)
-    dob = models.DateField()
-    pin = models.CharField(max_length=6)
-    father_name = models.CharField(max_length=255)
-    CNIC = models.CharField(max_length=13)
 
     def __str__(self):
         return self.name
