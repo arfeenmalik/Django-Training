@@ -10,22 +10,26 @@
         <div class="card-header card-header-secondary">
             <h4 class="card-title">Training</h4>
         </div>
-        {% for field in form %}
             <div class="form-group card-body">
-                <label>{{field.label}}</label>
-                {% if field.field.required %}
-                    <span style="color: red;" class="required">*</span>
-                {% endif %}
+                <div class="row g-3"  >
+                    {% for field in form %}
+                        <div class="col-6">
+                            <label>{{field.label}}</label>
+                            {% if field.field.required %}
+                                <span style="color: red;" class="required">*</span>
+                            {% endif %}
 
-                {{field}}
-                {% if field.help_text %}
-                    <small style="color: grey">{{ field.help_text }}</small>
-                {% endif %}
-                {% for error in field.errors %}
-                    <p style="color: red">{{ error }}</p>
-                {% endfor %}
+                            {{field}}
+                            {% if field.help_text %}
+                                <small style="color: grey">{{ field.help_text }}</small>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <p style="color: red">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
             </div>
-        {% endfor %}
     </div>
     <!-- main form end --- in our case training form -->
 
