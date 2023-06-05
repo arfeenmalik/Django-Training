@@ -1,3 +1,5 @@
+import datetime
+
 from django.db import models
 
 
@@ -19,12 +21,12 @@ class CatTrainingType(models.Model):
 
 
 class Training(models.Model):
-    name = models.CharField(max_length=255)
-    type = models.ForeignKey(CatTrainingType, on_delete=models.CASCADE)
-    date_start = models.DateField()
-    date_end = models.DateField()
-    city = models.ForeignKey(CatCity, on_delete=models.CASCADE)
-    street_address = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, default='training')
+    type = models.ForeignKey(CatTrainingType, on_delete=models.CASCADE, default=1)
+    date_start = models.DateField(default=datetime.date.today)
+    date_end = models.DateField(default=datetime.date.today)
+    city = models.ForeignKey(CatCity, on_delete=models.CASCADE, default=1)
+    street_address = models.CharField(max_length=255, default='Islamabad')
 
 class TrainingFile(models.Model):
     fk_training = models.ForeignKey(Training, on_delete=models.CASCADE)

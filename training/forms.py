@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django import forms
 from .models import Training, ResourceItem, ResourcePerson, TrainingFile
 from django.forms import inlineformset_factory
@@ -9,7 +11,7 @@ class TrainingForm(forms.ModelForm):
         fields = ['name', 'type', 'date_start', 'date_end', 'city', 'street_address']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'date_start': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'date_start': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'},),
             'date_end': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'type': forms.Select(attrs={'class': 'form-control form-select'}),
             'city': forms.Select(attrs={'class': 'form-control form-select'}),
