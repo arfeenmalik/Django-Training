@@ -1,3 +1,4 @@
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -134,7 +135,7 @@ class TrainingInline():
             resource_person.save()
 
 
-class TrainingCreate(TrainingInline, CreateView):
+class TrainingCreate(LoginRequiredMixin, TrainingInline, CreateView):
 
     def get_context_data(self, **kwargs):
         print("get_context_data")
@@ -161,7 +162,7 @@ class TrainingCreate(TrainingInline, CreateView):
             }
 
 
-class TrainingUpdate(TrainingInline, UpdateView):
+class TrainingUpdate(LoginRequiredMixin, TrainingInline, UpdateView):
 
     def get_context_data(self, **kwargs):
         ctx = super(TrainingUpdate, self).get_context_data(**kwargs)
@@ -179,7 +180,7 @@ class TrainingUpdate(TrainingInline, UpdateView):
         }
 
 
-class GeneratePDF(View):
+class GeneratePDF(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = 'attachment; filename="form_letter.pdf"'
@@ -228,7 +229,7 @@ class GeneratePDF(View):
         return response
 
 
-class TrainingListView(FilterView):
+class TrainingListView(LoginRequiredMixin, FilterView):
     model = Training
     filterset_class = TrainingFilter
     template_name = 'training/home.html'
