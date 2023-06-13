@@ -7,11 +7,11 @@
         <h1>Trainings</h1>
     </div>
     <div class="col-2 mt-2">
-        <a class="btn btn-xs btn-secondary" href="{% url 'new-training' %}">New Training</a>
+        <a class="btn btn-secondary" href="{% url 'new-training' %}">New Training</a>
     </div>
 
 </div>
-<form class="form-inline mb-3" method="get">
+<form class="form mb-3" method="get">
     <div class="row">
 
         {% for field in filter.form.visible_fields %}
@@ -21,9 +21,9 @@
         </div>
         {% endfor %}
         <div class="col-3 mt-4">
-            <button class="btn btn-secondary" type="submit">Search</button>
-            <a class="btn btn-secondary" href="{% url 'home'  %}">Clear</a>
-            <a class="btn btn-secondary" href="{% url 'generate_pdf' %}">PDF</a>
+            <button class="btn btn-secondary mt-2" type="submit">Search</button>
+            <a class="btn btn-secondary mt-2" href="{% url 'home'  %}">Clear</a>
+            <a class="btn btn-secondary mt-2" href="{% url 'generate_pdf' %}">PDF</a>
 
         </div>
 

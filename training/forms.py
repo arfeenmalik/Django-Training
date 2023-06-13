@@ -3,6 +3,7 @@ from datetime import datetime
 from django import forms
 from .models import Training, ResourceItem, ResourcePerson, TrainingFile
 from django.forms import inlineformset_factory
+from django.forms.widgets import ClearableFileInput
 
 
 class TrainingForm(forms.ModelForm):
@@ -19,15 +20,22 @@ class TrainingForm(forms.ModelForm):
 
         }
 
+class CustomClearableFileInput(ClearableFileInput):
+    template_name = "training/clearable_file_input.html"
+    hidden_fields = []
 
 class TrainingFileForm(forms.ModelForm):
     class Meta:
         model = TrainingFile
         fields = ['description', 'file']
+
         widgets = {
             'description': forms.TextInput(attrs={'class': 'form-control'}),
+            # 'file': forms.FileField(widget=CustomClearableFileInput),
             # 'file': forms.FileInput(attrs={'class': 'form-control'}),
-            'file': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            # 'file': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'file': CustomClearableFileInput(attrs={'class': 'form-control'})
+            # 'file': forms.ClearableFileInput()
         }
 
 
