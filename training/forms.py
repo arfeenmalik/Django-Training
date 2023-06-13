@@ -26,7 +26,8 @@ class TrainingFileForm(forms.ModelForm):
         fields = ['description', 'file']
         widgets = {
             'description': forms.TextInput(attrs={'class': 'form-control'}),
-            'file': forms.FileInput(attrs={'class': 'form-control'}),
+            # 'file': forms.FileInput(attrs={'class': 'form-control'}),
+            'file': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }
 
 

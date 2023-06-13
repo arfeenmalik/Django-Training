@@ -1,9 +1,10 @@
+from django.conf.urls.static import static
 from django.urls import path
 from . import views
 from .views import (
     TrainingCreate, TrainingUpdate
 )
-
+from django.conf import settings
 
 urlpatterns = [
     path('', views.TrainingListView.as_view(), name='home'),
